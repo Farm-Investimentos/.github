@@ -7,6 +7,6 @@
         "Terraform"
     ],
     "filePatterns": [
-        ".*\\.tf"
+        "main.tf"
     ]
 }
