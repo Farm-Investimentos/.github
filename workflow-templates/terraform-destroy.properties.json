@@ -1,7 +1,7 @@
 {
     "name": "Terraform Create",
     "description": "Pipeline padrão para remover recursos de projetos Terraform",
-    "iconName": "tf-logo.svg",
+    "iconName": "tf-logo",
     "categories": [
         "Farm",
         "DevOps",
