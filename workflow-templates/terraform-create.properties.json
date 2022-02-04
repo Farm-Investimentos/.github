@@ -1,0 +1,12 @@
+{
+    "name": "Terraform Create",
+    "description": "Pipeline padrão para criação de recursos de projetos Terraform",
+    "iconName": "tf-logo.svg",
+    "categories": [
+        "DevOps",
+        "Terraform"
+    ],
+    "filePatterns": [
+        ".*\\.tf"
+    ]
+}

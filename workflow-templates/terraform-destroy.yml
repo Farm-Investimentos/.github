@@ -1,0 +1,85 @@
+##
+## Workflow para execução manual do Terraform
+##
+name: 'Terraform Destroy'
+
+on:
+  workflow_dispatch:
+    inputs:
+      envName:
+        description: Ambiente
+        required: true
+        type: choice
+        options:
+          - "dev"
+          - "uat"
+          - "prd"
+      doApply:
+        description: Aplicar
+        type: boolean
+        required: false
+        default: "false"
+      confirmation:
+        description: Para confirmar, digite 'DESTROY' na caixa de texto abaixo
+        required: true
+        type: string
+
+jobs:
+  terraform:
+    name: 'Terraform Destroy'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.envName }}
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+
+    # Setup AWS credentials
+    - name: Setup AWS for DEV
+      if: github.event.inputs.envName == 'dev'
+      run: |
+        echo "AWS_ACCESS_KEY_ID=${{  secrets.TERRAFORM_DEV_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.TERRAFORM_DEV_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+
+    - name: Setup AWS for UAT
+      if: github.event.inputs.envName == 'uat'
+      run: |
+        echo "AWS_ACCESS_KEY_ID=${{  secrets.TERRAFORM_UAT_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.TERRAFORM_UAT_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+
+    - name: Setup AWS for PRD
+      if: github.event.inputs.envName == 'prd'
+      run: |
+        echo "AWS_ACCESS_KEY_ID=${{  secrets.TERRAFORM_PRD_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.TERRAFORM_PRD_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Init
+      run: terraform init
+
+#    # Checks that all Terraform configuration files adhere to a canonical format
+#    - name: Terraform Format
+#      run: terraform fmt -check
+
+      # On push to master, build or change infrastructure according to Terraform configuration files
+      # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
+    - name: Destroy
+      if: github.ref == 'refs/heads/master' && github.event.inputs.doApply != 'false' && github.event.inputs.confirmation == 'DESTROY'
+      run: |
+        terraform destroy -auto-approve -input=false -no-color \
+          -var-file=env/${{ github.event.inputs.envName }}/vars.tfvars \
+          -var aws_access_key=$AWS_ACCESS_KEY_ID \
+          -var aws_secret_key=$AWS_SECRET_ACCESS_KEY \
+
+
