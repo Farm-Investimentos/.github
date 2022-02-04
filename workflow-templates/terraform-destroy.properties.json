@@ -3,6 +3,7 @@
     "description": "Pipeline padrão para remover recursos de projetos Terraform",
     "iconName": "tf-logo.svg",
     "categories": [
+        "Farm",
         "DevOps",
         "Terraform"
     ],
